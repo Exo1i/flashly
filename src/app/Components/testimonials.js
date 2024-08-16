@@ -72,7 +72,7 @@ let testimonials = [
         "Text": "This tool helps me make the most out of my study sessions. The AI ensures that I focus on the areas where I need the most improvement."
     },
     {
-        "Title": "Great for Quick Reviews",
+        "Title": "Great for Quick Testimonials",
         "Text": "I use these flashcards for quick reviews before meetings and presentations. The AI ensures that I am always prepared."
     },
     {

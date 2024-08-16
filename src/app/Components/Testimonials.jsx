@@ -1,12 +1,12 @@
 import Image from "next/image";
 import testimonials from "@/app/Components/testimonials";
 
-export default async function Reviews() {
+export default async function Testimonials() {
     let fetchedUsers = await fetch("https://randomuser.me/api/?results=6")
 
     let userData = await fetchedUsers.json()
-    return <div className={"flex flex-col items-center px-4"}>
-        <h1 className={"text-5xl font-bold text-blue-800 mb-10"}>Reviews</h1>
+    return <div className={"flex flex-col items-center"}>
+        <h1 className={"text-5xl font-bold text-blue-800 mb-8 mt-12"}>Testimonials</h1>
 
         <div
             className="grid mb-2 border border-blue-200 rounded-lg shadow-sm dark:border-blue-500 md:mb-12 md:grid-cols-2 bg-white dark:bg-blue-800 px-10">

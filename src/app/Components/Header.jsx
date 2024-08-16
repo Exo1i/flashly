@@ -9,16 +9,16 @@ export default async function Header() {
             Flashly
         </div>
         <div
-            className="flex items-center justify-center lg:justify-end gap-2 text-lg font-semibold text-blue-800 hidden lg:flex">
-            <div>
+            className=" items-center justify-center lg:justify-end gap-2 text-lg font-semibold text-blue-800 hidden lg:flex">
+            <div style={{color: "#4f46e5", fontFamily: "monospace", fontSize: "1em"}}>
                 {userObj ? `Welcome back, ${userObj.fullName}` : "Welcome to Flashly"}
             </div>
             {userObj && <UserButton />}
         </div>
         <div className={"lg:hidden md:block hidden"}>
             <SignedIn>
-            <UserButton />
-        </SignedIn></div>
+                <UserButton />
+            </SignedIn></div>
 
     </div>);
 }

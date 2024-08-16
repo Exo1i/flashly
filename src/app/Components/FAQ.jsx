@@ -1,33 +1,51 @@
+"use client"
+import {useState} from 'react';
+import Image from "next/image";
+import faqs from "@/app/Components/faq";
+
 export default function FAQ() {
-    return (<div className="bg-gray-900 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mx-auto max-w-2xl lg:max-w-none">
-                <div className="text-center space-y-4">
-                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Trusted by creators
-                                                                                             worldwide</h2>
-                    <p className="text-lg leading-8 text-gray-300">We can help you grow your audience and your business,
-                                                                   no matter the
-                                                                   size.
-                    </p>
-                </div>
-                <dl className="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="flex flex-col bg-white/5 p-8">
-                        <dt className="text-sm font-semibold leading-6 text-gray-300">words written in 2023</dt>
-                        <dd className="order-first text-3xl font-semibold tracking-tight text-white">12 million</dd>
+    // State to track which accordion is currently open
+    const [openAccordion, setOpenAccordion] = useState(null);
+
+    // Function to handle accordion toggle
+    const toggleAccordion = (index) => {
+        if (openAccordion === index) {
+            setOpenAccordion(null); // Close if the same accordion is clicked again
+        } else {
+            setOpenAccordion(index); // Open the clicked accordion
+        }
+    };
+
+    return (<div
+        className="rounded-2xl bg-indigo-50  py-10 overflow-hidden mx-96 sm:mx-16 mb-40 mt-40 2xl:py-16 xl:py-8  lg:rounded-tl-2xl lg:rounded-bl-2xl ">
+        <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div className="mb-16">
+                <h6 className="text-lg text-indigo-600 font-medium text-center mb-2">FAQs</h6>
+                <h2 className="text-4xl font-manrope text-center font-bold text-gray-900 leading-[3.25rem]">
+                    Frequently Asked Questions
+                </h2>
+            </div>
+
+            <div className="accordion-group">
+
+                {...faqs.map((faqs, index) => (<div key={index}
+                                                    className="accordion py-8 px-6 border-b border-solid border-gray-200 transition-all duration-500 rounded-2xl hover:bg-indigo-50">
+                    <button
+                        className="accordion-toggle group inline-flex items-center justify-between leading-8 text-gray-900 w-full transition duration-500 text-left hover:text-indigo-600"
+                        onClick={() => toggleAccordion(index)}
+                    >
+                        <h5>{faqs.question}</h5>
+                        <Image src={"/arrowDown.svg"} alt={"Arrow"} width={22} height={22}
+                               className={`transition duration-500 group-hover:text-indigo-600 ${openAccordion === index ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div
+                        className={`accordion-content w-full overflow-hidden transition-max-height duration-1000 ${openAccordion === index ? 'max-h-96' : 'max-h-0'}`}
+                    >
+                        <p className="text-base text-gray-900 leading-6">
+                            {faqs.answer}
+                        </p>
                     </div>
-                    <div className="flex flex-col bg-white/5 p-8">
-                        <dt className="text-sm font-semibold leading-6 text-gray-300">episodes uploaded</dt>
-                        <dd className="order-first text-3xl font-semibold tracking-tight text-white">10k</dd>
-                    </div>
-                    <div className="flex flex-col bg-white/5 p-8">
-                        <dt className="text-sm font-semibold leading-6 text-gray-300">hours of media</dt>
-                        <dd className="order-first text-3xl font-semibold tracking-tight text-white">6.6k</dd>
-                    </div>
-                    <div className="flex flex-col bg-white/5 p-8">
-                        <dt className="text-sm font-semibold leading-6 text-gray-300">answers</dt>
-                        <dd className="order-first text-3xl font-semibold tracking-tight text-white">2.1k</dd>
-                    </div>
-                </dl>
+                </div>))}
             </div>
         </div>
     </div>);
