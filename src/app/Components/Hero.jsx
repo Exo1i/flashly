@@ -16,15 +16,15 @@ export default function Hero() {
         </SignInButton>);
     } else {
         CTA = (<a href="/learn"
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-2xl sm:text-3xl md:text-4xl lg:text-5xl">
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-2xl sm:text-3xl md:text-4xl lg:text-5xl drop-shadow-[-5px_10px_30px_rgba(0,0,0,0.25)]">
             Start Learning
         </a>);
     }
 
     return (<div className="flex flex-col lg:flex-row justify-evenly items-center">
         {/* Display hero image */}
-        <Image src="heroImage.svg" alt="Hero Image" width={700} height={850}
-               className="w-full max-w-xs sm:max-w-md lg:max-w-lg xl:max-w-xl" />
+        <Image src="/testImage.jpg" alt="Hero Image" width={700} height={850}
+               className="w-full  border-8 border-blue-700/50 backdrop-blur-2xl drop-shadow-[-5px_40px_30px_rgba(0,0,0,0.25)]  rounded-2xl max-w-xs sm:max-w-md lg:max-w-lg xl:max-w-xl mr-12" />
 
         {/* Display main text and button */}
         <div className="text-center lg:text-center mt-8 lg:mt-0">

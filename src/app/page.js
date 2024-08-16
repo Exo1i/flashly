@@ -1,6 +1,8 @@
 import Header from "@/app/Components/Header";
 import Hero from "@/app/Components/Hero";
 import Reviews from "@/app/Components/Reviews";
+import FAQ from "@/app/Components/FAQ";
+import Statistics from "@/app/Components/Statistics";
 
 export default async function Home() {
     return (<>
@@ -11,5 +13,7 @@ export default async function Home() {
             </div>
         </main>
         <Reviews />
+        <Statistics />
+        <FAQ />
     </>);
 }
