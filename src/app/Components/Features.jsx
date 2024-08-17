@@ -56,9 +56,9 @@ export default function Features() {
                                     <path
                                         d="M15 12.5V18.75M18.75 2.5L11.25 2.5M15 28.75C8.7868 28.75 3.75 23.7132 3.75 17.5C3.75 11.2868 8.7868 6.25 15 6.25C21.2132 6.25 26.25 11.2868 26.25 17.5C26.25 23.7132 21.2132 28.75 15 28.75Z"
                                         stroke="white"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
                                     ></path>
                                 </svg>
                             </div>
@@ -97,8 +97,8 @@ export default function Features() {
                                 <path
                                     d="M24.6429 11.4286C24.6429 14.3872 20.2457 16.7857 14.8214 16.7857C9.3972 16.7857 5 14.3872 5 11.4286M24.6429 16.7857C24.6429 19.7444 20.2457 22.1429 14.8214 22.1429C9.3972 22.1429 5 19.7444 5 16.7857M24.6429 22.1429C24.6429 25.1015 20.2457 27.5 14.8214 27.5C9.3972 27.5 5 25.1015 5 22.1429M24.6429 6.96429C24.6429 9.42984 20.2457 11.4286 14.8214 11.4286C9.3972 11.4286 5 9.42984 5 6.96429C5 4.49873 9.3972 2.5 14.8214 2.5C20.2457 2.5 24.6429 4.49873 24.6429 6.96429Z"
                                     stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
                                 ></path>
                             </svg>
                         </div>
@@ -127,16 +127,16 @@ export default function Features() {
                                 <path
                                     d="M26.7301 15.661C26.7301 22.1995 21.306 27.5 14.8651 27.5C8.4242 27.5 3 22.1995 3 15.661C3 9.12254 8.4242 3.82202 14.8651 3.82202C16.5013 3.82202 18.0498 4.15472 19.4662 4.74812"
                                     stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
                                 ></path>
                                 <path
                                     d="M27.0002 2.5L19.6611 9.43956"
                                     stroke="white"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
                                 ></path>
                             </svg>
                         </div>
