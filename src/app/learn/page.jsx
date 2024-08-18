@@ -146,7 +146,7 @@ export default function Home() {
     const flipCard = () => {
         setIsFlipped(!isFlipped);
     };
-    if (navigator.userAgent.includes("Chrome")) return (
+    if (navigator && navigator.userAgent.includes("Chrome")) return (
         <main className="flex flex-col lg:flex-row h-screen overflow-hidden">
             <ToastContainer position="top-right" autoClose={5000} />
 
@@ -220,46 +220,46 @@ export default function Home() {
                 >
                     <AnimatePresence initial={false} custom={direction}>
                         {filteredCards.length > 0 ? (<motion.div
-                                key={cardIndex + (isFlipped ? '-flipped' : '')}
-                                custom={direction}
-                                variants={{
-                                    enter: (direction) => ({
-                                        y: direction > 0 ? 300 : -300, opacity: 0, rotateY: isFlipped ? 180 : 0
-                                    }), center: {
-                                        y: 0, opacity: 1, rotateY: isFlipped ? 180 : 0
-                                    }, exit: (direction) => ({
-                                        y: direction < 0 ? 300 : -300, opacity: 0, rotateY: isFlipped ? 180 : 0
-                                    }),
+                            key={cardIndex + (isFlipped ? '-flipped' : '')}
+                            custom={direction}
+                            variants={{
+                                enter: (direction) => ({
+                                    y: direction > 0 ? 300 : -300, opacity: 0, rotateY: isFlipped ? 180 : 0
+                                }), center: {
+                                    y: 0, opacity: 1, rotateY: isFlipped ? 180 : 0
+                                }, exit: (direction) => ({
+                                    y: direction < 0 ? 300 : -300, opacity: 0, rotateY: isFlipped ? 180 : 0
+                                }),
+                            }}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={{type: 'tween', duration: 0.3}}
+                            className={`absolute w-full h-full text-black rounded-lg shadow-lg flex flex-col justify-center items-center text-2xl font-sans p-4`}
+                            style={{
+                                backgroundColor: `#${filteredCards[cardIndex].color}`,
+                                backfaceVisibility: !isFlipped ? 'hidden' : "",
+                                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                            }}
+                        >
+                            {isFlipped ? (<p className="text-xl text-black font-bold" style={{
+                                transform: 'scale(-1, 1)'
+                            }}
+                            >{filteredCards[cardIndex].answer}</p>) : (
+                                <h2 className="text-3xl font-bold mb-4">{filteredCards[cardIndex].question}</h2>)}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteCard(filteredCards[cardIndex].id);
                                 }}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{type: 'tween', duration: 0.3}}
-                                className={`absolute w-full h-full text-black rounded-lg shadow-lg flex flex-col justify-center items-center text-2xl font-sans p-4`}
-                                style={{
-                                    backgroundColor: `#${filteredCards[cardIndex].color}`,
-                                    backfaceVisibility: !isFlipped ? 'hidden' : "",
-                                    transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
-                                }}
+                                className="absolute bottom-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
                             >
-                                {isFlipped ? (<p className="text-xl text-black font-bold" style={{
-                                        transform: 'scale(-1, 1)'
-                                    }}
-                                    >{filteredCards[cardIndex].answer}</p>) : (
-                                    <h2 className="text-3xl font-bold mb-4">{filteredCards[cardIndex].question}</h2>)}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteCard(filteredCards[cardIndex].id);
-                                    }}
-                                    className="absolute bottom-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
-                                >
-                                    <Trash2 size={20} />
-                                </button>
-                            </motion.div>) : (<div
-                                className="w-full h-full bg-gray-200 rounded-lg shadow-lg flex justify-center items-center text-gray-600 text-2xl font-sans">
-                                No matching cards
-                            </div>)}
+                                <Trash2 size={20} />
+                            </button>
+                        </motion.div>) : (<div
+                            className="w-full h-full bg-gray-200 rounded-lg shadow-lg flex justify-center items-center text-gray-600 text-2xl font-sans">
+                            No matching cards
+                        </div>)}
                     </AnimatePresence>
                 </div>
 
