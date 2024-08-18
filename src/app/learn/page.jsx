@@ -1,6 +1,6 @@
 'use client'
 
-import Microphone from "@/app/learn/components/Microphone";
+import Microphone from "@/app/learn/Components/Microphone";
 import {useRef} from "react";
 
 

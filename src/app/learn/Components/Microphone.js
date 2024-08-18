@@ -1,7 +1,7 @@
 import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
 import Image from "next/image";
-import talkToNova from "@/app/learn/components/talkToNova";
-import speechUtteranceChunker from "@/app/learn/components/speechUtteranceChunker";
+import talkToNova from "@/app/learn/Components/talkToNova";
+import speechUtteranceChunker from "@/app/learn/Components/speechUtteranceChunker";
 
 const Microphone = forwardRef(function Microphone({}, ref) {
     const [isActive, setIsActive] = useState(false);
