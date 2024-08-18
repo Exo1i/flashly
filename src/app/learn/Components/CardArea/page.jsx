@@ -1,30 +1,17 @@
 'use client';
-
+import { doc, collection, addDoc, deleteDoc, getDocs, query } from 'firebase/firestore';
 import { Box, Card, CardActionArea, CardContent, Typography, Button, Dialog, DialogTitle, DialogContent, DialogContentText } from "@mui/material";
 import { IconButton, TextField, DialogActions } from "@mui/material";
 import DeleteIcon from '@mui/icons-material/Delete';
 import Masonry from '@mui/lab/Masonry';
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useUser } from '@clerk/nextjs';
+import { db } from '@/config/config';
 
 export default function CardArea() {
-    const customObjects = [ //testing...
-        { id: 1, front: "Custom Custom Custom Custom Custom Custom Custom Custom Object 1 Custom Custom Custom Custom Custom Custom Custom Custom Object 1 Custom Custom Custom Custom Custom Custom Custom Custom Object 1 Custom Custom Custom Custom Custom Custom Custom Custom Object 1 end end end end end end end end end end end end end end end end", back: "bg-blue-100" },
-        { id: 2, front: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", back: "bg-green-100" },
-        { id: 3, front: "Custom  Custom Custom Custom Custom Object 1 Custom Custom Custom Custom Object 3", back: "bg-red-100" },
-        { id: 4, front: "Custom Object 4", back: "bg-yellow-100" },
-        { id: 5, front: "Custom Object 5", back: "bg-purple-100" },
-        { id: 6, front: "Custom Object 6", back: "bg-pink-100" },
-        { id: 7, front: "Custom Object 7", back: "bg-indigo-100" },
-        { id: 8, front: "Custom Object 8", back: "bg-teal-100" },
-        { id: 9, front: "Custom Object 9", back: "bg-orange-100" },
-        { id: 9, front: "Custom Custom Custom Custom Custom Object 1 Custom Custom Custom Custom Object 9", back: "bg-orange-100" },
-        { id: 9, front: "Custom Object 9", back: "bg-orange-100" },
-        { id: 9, front: "Custom Object 9", back: "bg-orange-100" },
-        { id: 9, front: "Custom Object 9", back: "bg-orange-100" },
-        { id: 9, front: "Custom Object 9", back: "bg-orange-100" },
-        { id: 9, front: "Custom Object 9", back: "bg-orange-100" },
 
-    ];
+    const { user } = useUser()
+    const [cards, setCards] = useState([])
     const [open, setOpen] = useState(false)
     const [answer, setAnswer] = useState('')
     const [question, setQuestion] = useState('')
@@ -42,12 +29,65 @@ export default function CardArea() {
     const handleClose = () => {
         setOpen(false)
     }
-    const handleAddCard = () => {
-
+    const handleAddCard = async () => {
+        try {
+            const userDocRef = doc(db, 'users', user.id);
+            const cardsCollectionRef = collection(userDocRef, 'cards');
+            const cardData = {
+                question: question,
+                answer: answer,
+                timestamp: new Date(),
+            }
+            const newCardRef = await addDoc(cardsCollectionRef, cardData);
+            console.log(newCardRef.id)
+            const cardId = newCardRef.id
+            setCards([
+                ...cards,
+                {
+                    ...cardData,
+                    id: cardId
+                }
+            ])
+            console.log('Card added with ID: ', newCardRef.id);
+        } catch (error) {
+            console.error('Error adding card: ', error);
+        }
     }
-    const handleDeleteCard = () => {
-
+    const handleDeleteCard = async (cardId) => {
+        try {
+            const cardDocRef = doc(db, 'users', user.id, 'cards', cardId);
+            await deleteDoc(cardDocRef);
+            setCards(prevCards => prevCards.filter(card => card.id != cardId));
+            console.log('Card deleted with ID: ', cardId);
+        } catch (error) {
+            console.error('Error deleting card: ', error);
+        }
     }
+
+    useEffect(() => {
+        async function fetchAllCards() {
+            if (!user)
+                return
+            try {
+                console.log(user.id)
+                const cardsCollectionRef = collection(doc(db, 'users', user.id), 'cards');
+                const q = query(cardsCollectionRef);
+                const querySnapshot = await getDocs(q);
+                console.log(querySnapshot.docs)
+                const ret = querySnapshot.docs.map(doc => ({
+                    id: doc.ref.id,
+                    ...doc.data(),
+                }));
+                setCards(ret)
+                console.log('Fetched cards: ', ret);
+                return ret;
+            } catch (error) {
+                console.error('Error fetching cards: ', error);
+            }
+        }
+        fetchAllCards()
+    }, [user])
+
     return (
         <Box>
             <Button onClick={handleOpen} sx={{
@@ -60,10 +100,12 @@ export default function CardArea() {
                 Add New Card
             </Button>
             <Masonry columns={3} spacing={3}>
-                {customObjects.map((flashcard, index) => (
-                    <Box position="relative">
+                {cards.map((flashcard, index) => (
+                    <Box position="relative" key={index}>
                         <Box position="absolute" right="0" top="0" zIndex={2}>
-                            <IconButton aria-label="delete" onClick={handleDeleteCard}>
+                            <IconButton aria-label="delete" onClick={() => {
+                                handleDeleteCard(flashcard.id)
+                            }}>
                                 <DeleteIcon />
                             </IconButton>
                         </Box>
@@ -98,12 +140,12 @@ export default function CardArea() {
                                         }}>
                                             <div>
                                                 <Typography variant="h7" component="div">
-                                                    {flashcard.front}
+                                                    {flashcard.question}
                                                 </Typography>
                                             </div>
                                             <div>
-                                                <Typography variant="h7" component="div">
-                                                    {flashcard.back}
+                                                <Typography variant="h7" component="div" className='absolute'>
+                                                    {flashcard.answer}
                                                 </Typography>
                                             </div>
                                         </Box>
@@ -112,7 +154,6 @@ export default function CardArea() {
                             </Card>
                         </Box>
                     </Box>
-
                 ))}
             </Masonry>
             <Dialog open={open} onClose={handleClose}>
@@ -128,7 +169,10 @@ export default function CardArea() {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Cancel</Button>
-                    <Button onClick={handleAddCard}>Add</Button>
+                    <Button onClick={() => {
+                        handleAddCard()
+                        handleClose()
+                    }}>Add</Button>
                 </DialogActions>
             </Dialog>
         </Box>
