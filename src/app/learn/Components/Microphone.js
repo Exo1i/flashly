@@ -4,7 +4,7 @@ import Image from "next/image";
 import talkToNova from "@/app/learn/Components/talkToNova";
 import speechUtteranceChunker from "@/app/learn/Components/speechUtteranceChunker";
 
-const Microphone = forwardRef(function Microphone({onTranscript, setAvatarStatus}, ref) {
+const Microphone = forwardRef(function Microphone({onTranscript, avatarRef, cards, cardsIndex}, ref) {
     const [isActive, setIsActive] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [history, setHistory] = useState([]);
@@ -27,14 +27,14 @@ const Microphone = forwardRef(function Microphone({onTranscript, setAvatarStatus
     }, []);
 
     const toggleMicrophone = () => {
-        setAvatarStatus("listening");
+
         handleSpeech();
         setIsActive(true);
 
     };
 
     function handleSpeech() {
-        setAvatarStatus("thinking");
+        avatarRef.current.changeStatus("listening");
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognitionRef.current = new SpeechRecognition();
@@ -56,19 +56,28 @@ const Microphone = forwardRef(function Microphone({onTranscript, setAvatarStatus
         recognitionRef.current.onresult = async function (event) {
             setHistory(prevHistory => [...prevHistory, {role: "user", content: event.results[0][0].transcript}]);
 
+            avatarRef.current.changeStatus("computing");
             await talkToNova([...history, {
-                role: "user", content: event.results[0][0].transcript
+                role: "user",
+                content: event.results[0][0].transcript + "Current card question " + cards[cardsIndex]?.question + "Current card answer " + cards[cardsIndex]?.answer
             }]).then(response => {
+                avatarRef.current.changeStatus("speaking");
+
                 onTranscript({user: event.results[0][0].transcript, assistant: response});
 
                 utteranceRef.current = new SpeechSynthesisUtterance(response);
                 setHistory(prevHistory => [...prevHistory, {role: "assistant", content: response}]);
 
                 utteranceRef.current.voice = voice;
+                if (!voice) {
+                    alert("Please wait for the voice to load/reload the page");
+                    return
+                }
                 speechUtteranceChunker(utteranceRef.current, {
                     chunkLength: 150
                 }, function () {
                     setIsLoading(false);
+                    avatarRef.current.changeStatus("neutral");
                     console.log('Finished speaking');
                 });
             });

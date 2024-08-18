@@ -1,11 +1,18 @@
-import React from 'react';
-import "./styles.css"
+import React, {forwardRef, useImperativeHandle, useState} from 'react';
+import './styles.css';
 
-const TalkingFace = ({status}) => {
+const TalkingFace = forwardRef(function TalkingFace({status}, ref) {
+    const [st, setSt] = useState(status || 'neutral');
+
+    useImperativeHandle(ref, () => ({
+        changeStatus: (newStatus) => {
+            setSt(newStatus);
+        }
+    }));
 
     return (
         <div id="container">
-            <div id="bot" className={`neutral ${status}`}>
+            <div id="bot" className={st}>
                 <div id="head">
                     <div id="left-ear">
                         <div id="left-ear-inner"></div>
@@ -23,8 +30,7 @@ const TalkingFace = ({status}) => {
                 </div>
             </div>
         </div>
-    )
-        ;
-};
+    );
+});
 
 export default TalkingFace;

@@ -1,5 +1,4 @@
 'use client';
-
 import React, {useEffect, useRef, useState} from 'react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {ChevronDown, ChevronUp, Plus, Search, Trash2, X} from 'lucide-react';
@@ -7,8 +6,11 @@ import Microphone from "@/app/learn/Components/Microphone";
 import {addCard, deleteCard, fetchCards} from './Components/cardDatabaseHelper';
 import TextDialog from "@/app/learn/Components/TextDialog";
 import TalkingFace from "@/app/learn/Components/TalkingFace";
+import {loadStripe} from '@stripe/stripe-js';
 
-const CARD_COLORS = ['bg-[#ffa719]', 'bg-[#e56660]', 'bg-[#b94a53]', 'bg-[#4b345e]', 'bg-[#724e94]',];
+const stripePromise = loadStripe('pk_test_51Pp6hwP12cyIhE2ksUjwvUtgDSE9gDI4S7JLD44TN2q24kWJ9xJtMNVEaB3ePuHYcwiDGMAJPYPksu8RsIByzabb00tWWCgaWj');
+
+const CARD_COLORS = ['ffa719', 'e56660', 'b94a53', '4b345e', '724e94',];
 
 export default function Home() {
     const [cards, setCards] = useState([]);
@@ -25,13 +27,16 @@ export default function Home() {
     const [isUserTextExpanded, setIsUserTextExpanded] = useState(false);
     const cardRef = useRef(null);
     const [avatarStatus, setAvatarStatus] = useState("neutral");
+    const faceRef = useRef(null);
+    const loadCards = async () => {
+        const loadedCards = await fetchCards();
+        console.log('loadedCards', loadedCards)
+        setCards(loadedCards);
+        setFilteredCards(loadedCards);
+    };
 
     useEffect(() => {
-        const loadCards = async () => {
-            const loadedCards = await fetchCards();
-            setCards(loadedCards);
-            setFilteredCards(loadedCards);
-        };
+
         loadCards();
     }, []);
 
@@ -86,12 +91,13 @@ export default function Home() {
     };
 
     const handleAddCard = async () => {
-        const addedCard = await addCard(newCard);
-        setCards([...cards, addedCard]);
-        setFilteredCards([...filteredCards, addedCard]);
-        setIsModalOpen(false);
-        setNewCard({question: '', answer: '', color: CARD_COLORS[0]});
-    };
+            const addedCard = await addCard(newCard);
+            setCards([...cards, addedCard]);
+            setFilteredCards([...filteredCards, addedCard]);
+            setIsModalOpen(false);
+            setNewCard({question: '', answer: '', color: ''});
+        }
+    ;
 
     const handleDeleteCard = async (id) => {
         await deleteCard(id);
@@ -104,10 +110,11 @@ export default function Home() {
     };
 
     const handleMicrophoneInput = (text) => {
+        loadCards();
         setUserText(text.user);
         // Here you would typically send the text to your AI service and get a response
         // For now, we'll just echo the user's input
-        setAvatarText(`You said: ${text.assistant}`);
+        setAvatarText(`${text.assistant}`);
     };
 
     useEffect(() => {
@@ -124,12 +131,39 @@ export default function Home() {
     }, [cardIndex, filteredCards]);
 
 
+    const handleBuyPro = async () => {
+        const stripe = await stripePromise;
+        const {error} = await stripe.redirectToCheckout({
+            lineItems: [{price: 'price_1Pp6ooP12cyIhE2kkyfYsdOd', quantity: 1}],
+            mode: 'subscription',
+            successUrl: `${window.location.origin}/success`,
+            cancelUrl: `${window.location.origin}/cancel`,
+        });
+
+        if (error) {
+            console.error('Error:', error);
+        }
+    };
+
+
     return (<main className="flex flex-col lg:flex-row h-screen overflow-hidden">
+
+        {/* Buy Pro Button */}
+        <motion.button
+            className="fixed top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-full z-50"
+            whileHover={{scale: 1.05}}
+            whileTap={{scale: 0.95}}
+            onClick={handleBuyPro}
+        >
+            Buy Pro
+        </motion.button>
+
+
         {/* Avatar Section */}
         <div className="w-full lg:w-2/3 bg-gray-800 p-4 relative flex flex-col items-center">
             {/* Avatar icon (visible only on large screens) */}
             <div className="hidden lg:block w-40 h-40 bg-gray-600 rounded-full mb-4"><TalkingFace
-                status={avatarStatus} /></div>
+                status={avatarStatus} ref={faceRef} /></div>
 
             {/* Chat Section (visible only on large screens) */}
             <div className="w-full max-w-md space-y-4 lg:space-y-8 hidden lg:block">
@@ -153,14 +187,15 @@ export default function Home() {
         {/* Microphone Section (visible only on small screens, positioned in the center of the bottom of the screen) */}
         <div
             className="fixed bottom-6 left-1/2 transform -translate-x-1/2 lg:bottom-10 lg:right-2/3 lg:translate-x-0 lg:visible z-50">
-            <Microphone onTranscript={handleMicrophoneInput} setAvatarStatus={setAvatarStatus} />
+            <Microphone onTranscript={handleMicrophoneInput} avatarRef={faceRef} cards={cards}
+                        cardsIndex={cardIndex} />
         </div>
 
 
         {/* Card Section */}
         <div className="w-full lg:w-1/3 flex flex-col items-center justify-center p-4 relative">
             {/* Search Bar */}
-            <div className="w-full max-w-md flex items-center bg-white rounded-full p-2 mb-4 z-10">
+            <div className="w-full max-w-md flex items-center bg-white rounded-full drop-shadow-xl p-2 mb-4 z-10">
                 <Search className="text-gray-500 mr-2" />
                 <input
                     type="text"
@@ -173,7 +208,7 @@ export default function Home() {
 
             <div
                 ref={cardRef}
-                className="w-full max-w-md aspect-[3/4] relative"
+                className="w-full max-w-md aspect-[3/4] relative drop-shadow-lg border-4 border-blue-700/50 rounded-3xl overflow-hidden"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
@@ -191,8 +226,8 @@ export default function Home() {
                         animate="center"
                         exit="exit"
                         transition={{type: 'tween', duration: 0.3}}
-                        className={`absolute w-full h-full ${filteredCards[cardIndex].color} rounded-lg shadow-lg flex flex-col justify-center items-center text-white text-2xl font-sans p-4`}
-                    >
+                        className={`absolute w-full h-full text-black  rounded-lg shadow-lg flex flex-col justify-center items-center text-2xl font-sans p-4`}
+                        style={{backgroundColor: `#${filteredCards[cardIndex].color}`}}>
                         <h2 className="text-3xl font-bold mb-4">{filteredCards[cardIndex].question}</h2>
                         <p className="text-xl">{filteredCards[cardIndex].answer}</p>
                         <button
@@ -261,7 +296,7 @@ export default function Home() {
                         <div className="flex space-x-2">
                             {CARD_COLORS.map((color, index) => (<button
                                 key={index}
-                                className={`w-8 h-8 rounded-full ${color} ${newCard.color === color ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
+                                className={`w-8 h-8 rounded-full bg-[#${color}] ${newCard.color === color ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
                                 onClick={() => setNewCard({...newCard, color})}
                             />))}
                         </div>
