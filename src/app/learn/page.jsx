@@ -189,7 +189,7 @@ export default function Home() {
 
         {/* Microphone Section (visible only on small screens, positioned in the center of the bottom of the screen) */}
         <div
-            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 lg:bottom-10 lg:right-2/3 lg:translate-x-0 lg:visible z-50">
+            className="fixed bottom-10 right-10 md:bottom-6 md:left-1/2 transform -translate-x-1/2 lg:bottom-10 lg:right-2/3 lg:translate-x-0 lg:visible z-50">
             <Microphone onTranscript={handleMicrophoneInput} avatarRef={faceRef} cards={cards}
                         cardsIndex={cardIndex} />
         </div>
