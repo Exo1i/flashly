@@ -7,10 +7,13 @@ import {addCard, deleteCard, fetchCards} from './Components/cardDatabaseHelper';
 import TextDialog from "@/app/learn/Components/TextDialog";
 import TalkingFace from "@/app/learn/Components/TalkingFace";
 import {loadStripe} from '@stripe/stripe-js';
+import {useUser} from '@clerk/nextjs';
+import 'react-toastify/dist/ReactToastify.css';
+import {toast, ToastContainer} from "react-toastify";
 
 const stripePromise = loadStripe('pk_test_51Pp6hwP12cyIhE2ksUjwvUtgDSE9gDI4S7JLD44TN2q24kWJ9xJtMNVEaB3ePuHYcwiDGMAJPYPksu8RsIByzabb00tWWCgaWj');
 
-const CARD_COLORS = ['ffa719', 'e56660', 'b94a53', '4b345e', '724e94',];
+const CARD_COLORS = ['ffa719', 'e56660', 'b94a53', '4b345e', '724e94'];
 
 export default function Home() {
     const [cards, setCards] = useState([]);
@@ -25,18 +28,19 @@ export default function Home() {
     const [userText, setUserText] = useState("");
     const [isAvatarTextExpanded, setIsAvatarTextExpanded] = useState(false);
     const [isUserTextExpanded, setIsUserTextExpanded] = useState(false);
+    const [isFlipped, setIsFlipped] = useState(false);
     const cardRef = useRef(null);
     const [avatarStatus, setAvatarStatus] = useState("neutral");
     const faceRef = useRef(null);
+    const {user} = useUser();
+
     const loadCards = async () => {
         const loadedCards = await fetchCards();
-        console.log('loadedCards', loadedCards)
         setCards(loadedCards);
         setFilteredCards(loadedCards);
     };
 
     useEffect(() => {
-
         loadCards();
     }, []);
 
@@ -44,6 +48,7 @@ export default function Home() {
         if (cardIndex < filteredCards.length - 1) {
             setDirection(1);
             setCardIndex(cardIndex + 1);
+            setIsFlipped(false);
         }
     };
 
@@ -51,6 +56,7 @@ export default function Home() {
         if (cardIndex > 0) {
             setDirection(-1);
             setCardIndex(cardIndex - 1);
+            setIsFlipped(false);
         }
     };
 
@@ -88,16 +94,21 @@ export default function Home() {
         const filtered = cards.filter(card => card.question.toLowerCase().includes(term) || card.answer.toLowerCase().includes(term));
         setFilteredCards(filtered);
         setCardIndex(0);
+        setIsFlipped(false);
     };
 
     const handleAddCard = async () => {
-            const addedCard = await addCard(newCard);
-            setCards([...cards, addedCard]);
-            setFilteredCards([...filteredCards, addedCard]);
-            setIsModalOpen(false);
-            setNewCard({question: '', answer: '', color: ''});
+        if (cards.length >= 10 && !user?.publicMetadata?.role === 'pro') {
+            toast.error("You've reached the maximum limit of 10 cards. Upgrade to Pro for unlimited cards!");
+            return;
         }
-    ;
+        const addedCard = await addCard(newCard);
+        setCards([...cards, addedCard]);
+        setFilteredCards([...filteredCards, addedCard]);
+        setIsModalOpen(false);
+        setNewCard({question: '', answer: '', color: CARD_COLORS[0]});
+    };
+
 
     const handleDeleteCard = async (id) => {
         await deleteCard(id);
@@ -131,29 +142,21 @@ export default function Home() {
     }, [cardIndex, filteredCards]);
 
 
-    const handleBuyPro = async () => {
-        const stripe = await stripePromise;
-        const {error} = await stripe.redirectToCheckout({
-            lineItems: [{price: 'price_1Pp6ooP12cyIhE2kkyfYsdOd', quantity: 1}],
-            mode: 'subscription',
-            successUrl: `${window.location.origin}/success`,
-            cancelUrl: `${window.location.origin}/cancel`,
-        });
-
-        if (error) {
-            console.error('Error:', error);
-        }
+    const flipCard = () => {
+        setIsFlipped(!isFlipped);
     };
 
-
     return (<main className="flex flex-col lg:flex-row h-screen overflow-hidden">
+        <ToastContainer position="top-right" autoClose={5000} />
 
         {/* Buy Pro Button */}
         <motion.button
             className="fixed top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-full z-50"
             whileHover={{scale: 1.05}}
             whileTap={{scale: 0.95}}
-            onClick={handleBuyPro}
+            onClick={() => {
+                window.location.href = "https://buy.stripe.com/test_eVaeWOb6Ce1f4iQ8ww"
+            }}
         >
             Buy Pro
         </motion.button>
@@ -212,34 +215,65 @@ export default function Home() {
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
+                onClick={flipCard}
             >
                 <AnimatePresence initial={false} custom={direction}>
-                    {filteredCards.length > 0 ? (<motion.div
-                        key={cardIndex}
-                        custom={direction}
-                        variants={{
-                            enter: (direction) => ({y: direction > 0 ? 300 : -300, opacity: 0}),
-                            center: {y: 0, opacity: 1},
-                            exit: (direction) => ({y: direction < 0 ? 300 : -300, opacity: 0}),
-                        }}
-                        initial="enter"
-                        animate="center"
-                        exit="exit"
-                        transition={{type: 'tween', duration: 0.3}}
-                        className={`absolute w-full h-full text-black  rounded-lg shadow-lg flex flex-col justify-center items-center text-2xl font-sans p-4`}
-                        style={{backgroundColor: `#${filteredCards[cardIndex].color}`}}>
-                        <h2 className="text-3xl font-bold mb-4">{filteredCards[cardIndex].question}</h2>
-                        <p className="text-xl">{filteredCards[cardIndex].answer}</p>
-                        <button
-                            onClick={() => handleDeleteCard(filteredCards[cardIndex].id)}
-                            className="absolute bottom-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
+                    {filteredCards.length > 0 ? (
+                        <motion.div
+                            key={cardIndex + (isFlipped ? '-flipped' : '')}
+                            custom={direction}
+                            variants={{
+                                enter: (direction) => ({
+                                    y: direction > 0 ? 300 : -300,
+                                    opacity: 0,
+                                    rotateY: isFlipped ? 180 : 0
+                                }),
+                                center: {
+                                    y: 0,
+                                    opacity: 1,
+                                    rotateY: isFlipped ? 180 : 0
+                                },
+                                exit: (direction) => ({
+                                    y: direction < 0 ? 300 : -300,
+                                    opacity: 0,
+                                    rotateY: isFlipped ? 180 : 0
+                                }),
+                            }}
+                            initial="enter"
+                            animate="center"
+                            exit="exit"
+                            transition={{type: 'tween', duration: 0.3}}
+                            className={`absolute w-full h-full text-black rounded-lg shadow-lg flex flex-col justify-center items-center text-2xl font-sans p-4`}
+                            style={{
+                                backgroundColor: `#${filteredCards[cardIndex].color}`,
+                                backfaceVisibility: !isFlipped ? 'hidden' : "",
+                                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                            }}
                         >
-                            <Trash2 size={20} />
-                        </button>
-                    </motion.div>) : (<div
-                        className="w-full h-full bg-gray-200 rounded-lg shadow-lg flex justify-center items-center text-gray-600 text-2xl font-sans">
-                        No matching cards
-                    </div>)}
+                            {isFlipped ? (
+                                <p className="text-xl text-black font-bold" style={{
+                                    transform: 'scale(-1, 1)'
+                                }}
+                                >{filteredCards[cardIndex].answer}</p>
+                            ) : (
+                                <h2 className="text-3xl font-bold mb-4">{filteredCards[cardIndex].question}</h2>
+                            )}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteCard(filteredCards[cardIndex].id);
+                                }}
+                                className="absolute bottom-4 right-4 bg-red-500 hover:bg-red-600 text-white rounded-full p-2"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        </motion.div>
+                    ) : (
+                        <div
+                            className="w-full h-full bg-gray-200 rounded-lg shadow-lg flex justify-center items-center text-gray-600 text-2xl font-sans">
+                            No matching cards
+                        </div>
+                    )}
                 </AnimatePresence>
             </div>
 
