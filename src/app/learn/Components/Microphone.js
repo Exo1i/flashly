@@ -1,100 +1,85 @@
-import {forwardRef, useEffect, useImperativeHandle, useRef, useState} from "react";
+'use client'
+import {forwardRef, useEffect, useRef, useState} from "react";
 import Image from "next/image";
 import talkToNova from "@/app/learn/Components/talkToNova";
 import speechUtteranceChunker from "@/app/learn/Components/speechUtteranceChunker";
 
-const Microphone = forwardRef(function Microphone({}, ref) {
+const Microphone = forwardRef(function Microphone({onTranscript, setAvatarStatus}, ref) {
     const [isActive, setIsActive] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [history, setHistory] = useState([]);
-    const [voice, setVoice] = useState([])
-    const recognitionRef = useRef()
-    const utteranceRef = useRef()
-    // Expose isLoading to the parent component
-    useImperativeHandle(ref, () => ({
-        get isLoading() {
-            return isLoading;
-        }
-    }));
+    const [voice, setVoice] = useState([]);
+    const recognitionRef = useRef();
+    const utteranceRef = useRef();
 
     useEffect(() => {
         const voices = window.speechSynthesis.getVoices();
         if (Array.isArray(voices) && voices.length > 0) {
             let englishVoice = voices.filter(({lang}) => lang.indexOf('en-') !== -1)[1];
-            setVoice(englishVoice)
+            setVoice(englishVoice);
         }
         if ('onvoiceschanged' in window.speechSynthesis) {
             window.speechSynthesis.onvoiceschanged = () => {
                 let englishVoice = window.speechSynthesis.getVoices().filter(({lang}) => lang.indexOf('en-') !== -1)[1];
-                setVoice(englishVoice)
-            }
-
+                setVoice(englishVoice);
+            };
         }
-    }, [])
-
+    }, []);
 
     const toggleMicrophone = () => {
-        if (isActive) {
-            recognitionRef.current.stop()
-            setIsActive(false)
-        } else {
-            handleSpeech()
-            setIsActive(true)
-        }
+        setAvatarStatus("listening");
+        handleSpeech();
+        setIsActive(true);
+
     };
 
     function handleSpeech() {
+        setAvatarStatus("thinking");
+
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognitionRef.current = new SpeechRecognition();
 
-        recognitionRef.current.start()
+        recognitionRef.current.start();
 
         recognitionRef.current.onstart = function () {
             window.speechSynthesis.cancel();
-            console.log('Voice activated')
-        }
+            console.log('Voice activated');
+        };
 
         recognitionRef.current.onend = function () {
-            recognitionRef.current.stop()
-            setIsActive(false)
-            setIsLoading(true)
-            console.log('Voice deactivated')
-        }
+            recognitionRef.current.stop();
+            setIsActive(false);
+            setIsLoading(true);
+            console.log('Voice deactivated');
+        };
 
         recognitionRef.current.onresult = async function (event) {
-            setHistory(prevHistory => [...prevHistory, {role: "user", content: event.results[0][0].transcript}])
+            setHistory(prevHistory => [...prevHistory, {role: "user", content: event.results[0][0].transcript}]);
 
             await talkToNova([...history, {
                 role: "user", content: event.results[0][0].transcript
             }]).then(response => {
+                onTranscript({user: event.results[0][0].transcript, assistant: response});
 
-                utteranceRef.current = new SpeechSynthesisUtterance(response)
-                setHistory(prevHistory => [...prevHistory, {role: "assistant", content: response}])
-                // console.log(response)
-                utteranceRef.current.voice = voice
+                utteranceRef.current = new SpeechSynthesisUtterance(response);
+                setHistory(prevHistory => [...prevHistory, {role: "assistant", content: response}]);
+
+                utteranceRef.current.voice = voice;
                 speechUtteranceChunker(utteranceRef.current, {
                     chunkLength: 150
                 }, function () {
-                    //some code to execute when done
-                    {
-                        setIsLoading(false)
-                        console.log('Finished speaking')
-                    }
-
+                    setIsLoading(false);
+                    console.log('Finished speaking');
                 });
-
-
-            })
-
-        }
+            });
+        };
     }
 
-
-    return (<div className="relative w-screen h-screen bg-[#222032] flex justify-end items-center">
-        <div className="absolute bottom-[5em] left-1/2 transform -translate-x-1/2">
+    return (
+        <div className="absolute bottom-10 right-10 lg:right-16 z-50">
             <div
                 className="relative flex justify-center items-center"
-                onClick={!isLoading ? toggleMicrophone : null}  // Disable onClick when isLoading is true
+                onClick={!isLoading ? toggleMicrophone : null} // Disable onClick when isLoading is true
             >
                 {/* Outline with pulse animation only when active */}
                 <div
@@ -111,18 +96,21 @@ const Microphone = forwardRef(function Microphone({}, ref) {
                 <div
                     className={`w-[100px] h-[100px] absolute rounded-full flex justify-center items-center ${isLoading ? "animate-pulse bg-[#FFAACD]" : isActive ? "bg-[#FFAACD] shadow-[0px_-2px_15px_#FFAACD]" : "bg-[#6B6B6B] shadow-[0px_-2px_10px_#3A3A3A]"}`}
                 >
-                    {isLoading ? (<div
-                        className="w-[40px] h-[40px] border-t-4 border-white border-solid rounded-full animate-spin"></div>) : (
+                    {isLoading ? (
+                        <div
+                            className="w-[40px] h-[40px] border-t-4 border-white border-solid rounded-full animate-spin"></div>
+                    ) : (
                         <Image
                             src={"microphone.svg"}
                             alt={"Press To talk To Nova"}
                             width={60}
                             height={60}
                             className={`${isActive ? "brightness-100" : "brightness-75"} transition-opacity duration-300 ${isLoading ? "opacity-0" : "opacity-100"}`}
-                        />)}
+                        />
+                    )}
                 </div>
             </div>
         </div>
-    </div>);
-})
+    );
+});
 export default Microphone;
