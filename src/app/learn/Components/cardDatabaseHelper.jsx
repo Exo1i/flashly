@@ -2,11 +2,11 @@
 
 import {db} from "@/config/config"; // Adjust the import path as needed
 import {addDoc, collection, deleteDoc, doc, getDocs, writeBatch} from 'firebase/firestore';
-import {auth} from "@clerk/nextjs/server";
 
-const CARDS_COLLECTION = `cards/${auth().userId}/cards`;
 
-export async function fetchCards() {
+export async function fetchCards(userId) {
+    const CARDS_COLLECTION = `cards/${userId}/cards`;
+
     const cardsCollection = collection(db, CARDS_COLLECTION);
     const cardSnapshot = await getDocs(cardsCollection);
     return cardSnapshot.docs.map(doc => ({
@@ -15,7 +15,9 @@ export async function fetchCards() {
     }));
 }
 
-export async function addCard(cardData) {
+export async function addCard(cardData, userId) {
+    const CARDS_COLLECTION = `cards/${userId}/cards`;
+
     const cardsCollection = collection(db, CARDS_COLLECTION);
     const docRef = await addDoc(cardsCollection, cardData);
     return {
@@ -24,12 +26,16 @@ export async function addCard(cardData) {
     };
 }
 
-export async function deleteCard(cardId) {
+export async function deleteCard(cardId, userId) {
+    const CARDS_COLLECTION = `cards/${userId}/cards`;
+
     const cardDoc = doc(db, CARDS_COLLECTION, cardId);
     await deleteDoc(cardDoc);
 }
 
-export async function addCards(cards) {
+export async function addCards(cards, userId) {
+    const CARDS_COLLECTION = `cards/${userId}/cards`;
+
     const batch = writeBatch(db);
     const cardsCollection = collection(db, CARDS_COLLECTION);
 

@@ -5,7 +5,7 @@ import {useAudioRecorder} from "react-audio-voice-recorder";
 import handleTranscription from "@/app/learn/Components/handleTranscription";
 import Image from "next/image";
 
-const Microphone = forwardRef(function Microphone({onTranscript, avatarRef, cards, cardsIndex}, ref) {
+const Microphone = forwardRef(function Microphone({onTranscript, avatarRef, cards, cardsIndex, userId}, ref) {
 
     const [isLoading, setIsLoading] = useState(false);
     const [history, setHistory] = useState([]);
@@ -64,7 +64,7 @@ const Microphone = forwardRef(function Microphone({onTranscript, avatarRef, card
                 await talkToNova([...history, {
                     role: "user",
                     content: transcribe.text + ". Current card question " + cards[cardsIndex]?.question + "Current card answer " + cards[cardsIndex]?.answer
-                }]).then(async response => {
+                }], userId).then(async response => {
                     avatarRef.current.changeStatus("speaking");
 
                     onTranscript({user: transcribe.text, assistant: response});
@@ -77,6 +77,8 @@ const Microphone = forwardRef(function Microphone({onTranscript, avatarRef, card
                         .then(arrayBuffer => {
                             playAudio(arrayBuffer);
                             setIsLoading(false)
+                            avatarRef.current.changeStatus("neutral");
+
                         })
                         .catch(error => {
                             console.error("Error playing audio:", error);
